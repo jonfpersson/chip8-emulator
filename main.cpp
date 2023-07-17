@@ -194,6 +194,24 @@ int main(int argc, char* argv[])
                 m_ProgramCounter+=2;
             }
         }
+        case 0xA000:
+        {
+            m_AddressI = 0xA000 & 0x0FFF;
+        }
+        case 0xB000:
+        {
+	        m_ProgramCounter = m_Registers[0] + (opcode & 0x0FFF);
+        }
+        case 0xC000:
+        {
+            int regx = opcode & 0x0F00;
+            regx >>= 8;
+            m_Registers[regx] = rand() & (opcode & 0x00FF);
+        }
+        case 0xD000:
+        {
+            //draw stuff
+        }
         break ;
         default : break ; // opcode yet to be handled
     }

@@ -2,6 +2,9 @@
 
 ## Introduction
 
+## What is CHIP-8?
+CHIP-8 is a simple, interpreted programming language primarily used to design and run games on a variety of platforms. It was originally developed in the mid-1970s to make programming games easier for early microcomputers. The CHIP-8 system includes an instruction set and a virtual machine that enables programs written in the CHIP-8 language to be executed on compatible systems.
+
 This is a Chip-8 emulator developed in C++ for running retro Chip-8 games. The emulator accurately emulates the behavior of the original Chip-8 system, allowing enthusiasts to enjoy classic games and experiment with Chip-8 programs.
 
 ## Features

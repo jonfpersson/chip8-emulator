@@ -14,9 +14,14 @@ WORD m_AddressI ; // the 16-bit address register I
 WORD m_ProgramCounter ; // the 16-bit program counter
 std::vector<WORD> m_Stack; // the 16-bit stack
 
-BYTE m_ScreenData[64][32];
+BYTE m_ScreenData[64][32] = {{0}};
 
 BYTE m_keys[16];
+
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 320;
+const int PIXEL_SIZE = 10; // Adjust this to control the size of each pixel
+
 
 WORD GetNextOpcode( )
 {
@@ -41,20 +46,22 @@ int get_key_pressed(){
 }
 void CPUReset()
 {
-   m_AddressI = 0 ;
-   m_ProgramCounter = 0x200 ;
-   memset(m_Registers, 0, sizeof(m_Registers)) ; // set registers to 0
+    m_AddressI = 0 ;
+    m_ProgramCounter = 0x200 ;
+    memset(m_Registers, 0, sizeof(m_Registers)) ; // set registers to 0
+    memset(m_ScreenData, 255, sizeof(m_ScreenData));
 
-   // load in the game
-   FILE *in;
-   in = fopen( "INVADERS", "rb" );
-   fread( &m_GameMemory[0x200], 0xfff, 1, in);
-   fclose(in);
+    // load in the game
+    FILE *in;
+    in = fopen( "INVADERS", "rb" );
+    fread( &m_GameMemory[0x200], 0xfff, 1, in);
+    fclose(in);
 }
 void handle_instruction(int opcode){
     // decode the opcode
+    std::cout << "instruction " << std::hex <<opcode << std::endl;
     switch (opcode & 0xF000)
-    {
+    {   
         case 0x1000:
         {
             m_ProgramCounter = opcode & 0x0FFF;
@@ -66,6 +73,7 @@ void handle_instruction(int opcode){
             {
                 case 0x0000:{
                     memset(m_ScreenData, 255, sizeof(m_ScreenData));
+
                     break; // clear screen opcode
                 } 
                 case 0x000E: {
@@ -84,9 +92,9 @@ void handle_instruction(int opcode){
         }
         case 0x3000:
         {
-            WORD register_index = opcode & 0x0F00;
+            WORD register_index = (opcode & 0x0F00) >> 8;
             WORD constant = opcode & 0x00FF;
-            if(m_Registers[register_index >>= 8] == constant){
+            if(m_Registers[register_index] == constant){
                 m_ProgramCounter+=2;
             }
             break;
@@ -111,9 +119,9 @@ void handle_instruction(int opcode){
         }
         case 0x6000:
         {
-            WORD register_index = opcode & 0x0F00;
+            WORD register_index = (opcode & 0x0F00) >> 8;
             WORD constant = opcode & 0x00FF;
-            m_Registers[register_index >>= 8] = constant;
+            m_Registers[register_index] = constant;
             break;
         }
         case 0x7000:
@@ -233,7 +241,7 @@ void handle_instruction(int opcode){
         }
         case 0xA000:
         {
-            m_AddressI = 0xA000 & 0x0FFF;
+            m_AddressI = opcode & 0x0FFF;
             break;
         }
         case 0xB000:
@@ -250,7 +258,42 @@ void handle_instruction(int opcode){
         }
         case 0xD000:
         {
-            //draw stuff
+            int regx = opcode & 0x0F00;
+            regx = regx >> 8;
+            int regy = opcode & 0x00F0;
+            regy = regy >> 4;
+            
+            int x_cord = m_Registers[regx];
+	        int y_cord = m_Registers[regy];
+        	int height = opcode & 0x000F;
+	        m_Registers[0xf] = 0 ;
+        	for (int row = 0; row < height; row++){
+		        BYTE data = (m_GameMemory[m_AddressI+row]);
+                
+                int xpixel = 0 ;
+                int xpixelinv = 7 ;
+                for(xpixel = 0; xpixel < 8; xpixel++, xpixelinv--)
+                {
+                    int mask = 1 << xpixelinv ;
+                    if (data & mask)
+                    {
+                        int x = (xpixel) + x_cord ;
+                        int y = y_cord + (row) ;
+
+                        int color = 0 ;
+
+                        if (m_ScreenData[y][x] == 0)
+                        {
+                            color = 255 ;
+                            m_Registers[0xf]=1;
+                        }
+
+                        m_ScreenData[x][y] = color;
+
+                    }
+                }
+            }
+
             break;
         }
         case 0xE000:
@@ -260,6 +303,8 @@ void handle_instruction(int opcode){
                 {
                     int regx = (opcode & 0x0F00) >> 8;
                     int key_in_Vx = m_Registers[regx];
+                    std::cout << "key_in_Vx " <<key_in_Vx << std::endl;
+                    std::cout << "m_keys[key_in_Vx]" << static_cast<int>(m_keys[key_in_Vx]) << std::endl;
                     if(m_keys[key_in_Vx] == 1){
                         m_ProgramCounter +=2;
                     }
@@ -282,7 +327,6 @@ void handle_instruction(int opcode){
                 case 0x0007:
                 {
                     //Sets VX to the value of the delay timer.
-
                     break;
                 }
                 case 0x000A:
@@ -436,43 +480,70 @@ void key_press(int key, int state, bool& quit){
     }
 }
 
+void drawPixels(SDL_Renderer* renderer, unsigned char pixels[64][32]) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set the background color to black
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set the pixel color to white
+
+    for (int x = 0; x < 64; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            if (pixels[x][y] == 255) {
+                SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
+                SDL_RenderFillRect(renderer, &pixelRect);
+            }
+        }
+    }
+
+    SDL_RenderPresent(renderer);
+}
+
 int main(int argc, char* argv[])
 {
+
+
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         std::cout << "Failed to initialize the SDL2 library\n";
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Keypress Detection", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          64, 32, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("CHIP8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                          640, 320, SDL_WINDOW_SHOWN);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     // Event loop
     bool quit = false;
+    unsigned int time = SDL_GetTicks();
+    CPUReset();
     while (!quit) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) 
                 quit = true;
-            else if (event.type == SDL_KEYDOWN) 
+            else if (event.type == SDL_KEYDOWN) {
+                std::cout << event.key.keysym.sym << std::endl;
                 key_press(event.key.keysym.sym, 1, quit);
+            }
             else if (event.type == SDL_KEYUP) 
                 key_press(event.key.keysym.sym, 0, quit);
         }
-        // Add your game logic or other updates here
+        
+        unsigned int current = SDL_GetTicks();
+        //if(current - time >= (1000/60)){
+            WORD opcode = GetNextOpcode( ) ;
+            handle_instruction(opcode);
+            time = current;
+
+        //}
+        
+        drawPixels(renderer, m_ScreenData);
+        SDL_Delay(10);
     }
 
     // Clean up and quit SDL
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 0;
-
-    printf("size %i\n", sizeof(BYTE));
-    printf("size %i\n", sizeof(WORD));
-    CPUReset();
-
-    WORD opcode = GetNextOpcode( ) ;
-    handle_instruction(opcode);
-    
+ 
     return 0;
 }

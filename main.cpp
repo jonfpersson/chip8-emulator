@@ -3,7 +3,7 @@
 #include <vector>    // Include the vector header
 #include <cstring> // Include this header for using memset
 #include <SDL2/SDL.h>
-
+#include <unordered_map>
 
 typedef unsigned char BYTE;
 typedef unsigned short int WORD;
@@ -13,7 +13,7 @@ BYTE m_Registers[16] ; // 16 registers, 1 byte each
 WORD m_AddressI ; // the 16-bit address register I
 WORD m_ProgramCounter ; // the 16-bit program counter
 std::vector<WORD> m_Stack; // the 16-bit stack
-
+uint8_t delayTimer;
 BYTE m_ScreenData[64][32] = {{0}};
 
 BYTE m_keys[16];
@@ -21,6 +21,14 @@ BYTE m_keys[16];
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 320;
 const int PIXEL_SIZE = 10; // Adjust this to control the size of each pixel
+
+// Initialize the mapping of SDL keys to CHIP-8 keycodes
+std::unordered_map<SDL_Keycode, uint8_t> keyMap = {
+    {SDLK_1, 0x1}, {SDLK_2, 0x2}, {SDLK_3, 0x3}, {SDLK_4, 0xC},
+    {SDLK_q, 0x4}, {SDLK_w, 0x5}, {SDLK_e, 0x6}, {SDLK_r, 0xD},
+    {SDLK_a, 0x7}, {SDLK_s, 0x8}, {SDLK_d, 0x9}, {SDLK_f, 0xE},
+    {SDLK_z, 0xA}, {SDLK_x, 0x0}, {SDLK_c, 0xB}, {SDLK_v, 0xF}
+};
 
 
 WORD GetNextOpcode( )
@@ -425,57 +433,11 @@ void key_press(int key, int state, bool& quit){
         case SDLK_ESCAPE:
             quit = true;
             break;
-        case SDLK_1:
-            m_keys[0x1] = state;
-            break;
-        case SDLK_2:
-            m_keys[0x2] = state;
-            break;
-        case SDLK_3:
-            m_keys[0x3] = state;
-            break;
-        case SDLK_4:
-            m_keys[0xC] = state;
-            break;
-        case SDLK_q:
-            m_keys[0x4] = state;
-            break;
-        case SDLK_w:
-            m_keys[0x5] = state;
-            break;
-        case SDLK_e:
-            m_keys[0x6] = state;
-            break;
-        case SDLK_r:
-            m_keys[0xD] = state;
-            break;
-        case SDLK_a:
-            m_keys[0x7] = state;
-            break;
-        case SDLK_s:
-            m_keys[0x8] = state;
-            break;
-        case SDLK_d:
-            m_keys[0x9] = state;
-            break;
-        case SDLK_f:
-            m_keys[0xE] = state;
-            break;
-        case SDLK_z:
-            m_keys[0xA] = state;
-            break;
-        case SDLK_x:
-            m_keys[0x0] = state;
-            break;
-        case SDLK_c:
-            m_keys[0xB] = state;
-            break;
-        case SDLK_v:
-            m_keys[0xF] = state;
-            break;
         default:
-            // Handle other key presses here
-            //std::cout << event.key.keysym.sym << std::endl;
+            auto it = keyMap.find(key);
+            if (it != keyMap.end()) {
+                m_keys[it->second] = state;
+            }
             break;
     }
 }
@@ -538,7 +500,10 @@ int main(int argc, char* argv[])
         //}
         
         drawPixels(renderer, m_ScreenData);
-        SDL_Delay(10);
+        if (delayTimer > 0) {
+            --delayTimer;
+        }
+        SDL_Delay(16.7);
     }
 
     // Clean up and quit SDL

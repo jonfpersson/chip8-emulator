@@ -14,7 +14,7 @@ WORD m_AddressI ; // the 16-bit address register I
 WORD m_ProgramCounter ; // the 16-bit program counter
 std::vector<WORD> m_Stack; // the 16-bit stack
 uint8_t delayTimer;
-BYTE m_ScreenData[64][32] = {{0}};
+BYTE m_ScreenData[64][32];
 
 BYTE m_keys[16];
 
@@ -63,7 +63,7 @@ void CPUReset()
     m_ProgramCounter = 0x200;
     delayTimer = 0;
     memset(m_Registers, 0, sizeof(m_Registers)) ; // set registers to 0
-    memset(m_ScreenData, 255, sizeof(m_ScreenData));
+    memset(m_ScreenData, 0, sizeof(m_ScreenData));
 
     // load in the game
     FILE *in;
@@ -166,7 +166,15 @@ void handle_instruction(int opcode){
         case 0x8000:
         {
             switch(opcode & 0x000F){
-                
+                case 0x0000:
+                {
+                    WORD registerX_index = opcode & 0x0F00;
+                    WORD registerY_index = opcode & 0x00F0;
+                    registerX_index >>= 8;
+                    registerY_index >>= 4;
+                    m_Registers[registerX_index] = m_Registers[registerY_index];
+                    break;
+                }
                 case 0x0001:
                 {
                     WORD registerX_index = opcode & 0x0F00;
@@ -292,7 +300,7 @@ void handle_instruction(int opcode){
         {
             int regx = (opcode & 0x0F00) >> 8;
             int regy = (opcode & 0x00F0) >> 4;
-            
+
             int x_cord = m_Registers[regx];
             int y_cord = m_Registers[regy];
             int height = opcode & 0x000F;
@@ -300,14 +308,14 @@ void handle_instruction(int opcode){
 
             for (int row = 0; row < height; row++) {
                 BYTE data = m_GameMemory[m_AddressI + row];
-                
+
                 int xpixel = 0;
                 int xpixelinv = 7;
                 for (xpixel = 0; xpixel < 8; xpixel++, xpixelinv--) {
                     int mask = 1 << xpixelinv;
                     if (data & mask) {
-                        int x = (x_cord + xpixel) % 64; // Wrap X coordinate if necessary
-                        int y = (y_cord + row) % 32;    // Wrap Y coordinate if necessary
+                    int x = (x_cord + xpixel) % 64; // Wrap X coordinate if necessary
+                    int y = (y_cord + row) % 32;    // Wrap Y coordinate if necessary
 
                         int color = 0;
                         if (m_ScreenData[x][y] == 0) {
@@ -322,7 +330,6 @@ void handle_instruction(int opcode){
             drawPixels(renderer, m_ScreenData);
             break;
         }
-
         case 0xE000:
         {
             switch(opcode & 0x000F){
@@ -463,17 +470,13 @@ void key_press(int key, int state, bool& quit){
     }
 }
 
-
 int main(int argc, char* argv[])
 {
-
-
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         std::cout << "Failed to initialize the SDL2 library\n";
         return -1;
     }
-
 
     // Event loop
     bool quit = false;
@@ -493,17 +496,14 @@ int main(int argc, char* argv[])
         }
         
         unsigned int current = SDL_GetTicks();
-        //if(current - time >= (1000/60)){
-            WORD opcode = GetNextOpcode( ) ;
-            handle_instruction(opcode);
-            time = current;
-
-        //}
+        WORD opcode = GetNextOpcode( ) ;
+        handle_instruction(opcode);
+        time = current;
         
         if (delayTimer > 0) {
             --delayTimer;
         }
-        SDL_Delay(16.7);
+        SDL_Delay(1);
     }
 
     // Clean up and quit SDL

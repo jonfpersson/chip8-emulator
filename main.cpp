@@ -22,6 +22,11 @@ const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 320;
 const int PIXEL_SIZE = 10; // Adjust this to control the size of each pixel
 
+
+SDL_Window* window = SDL_CreateWindow("CHIP8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                        640, 320, SDL_WINDOW_SHOWN);
+SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
 // Initialize the mapping of SDL keys to CHIP-8 keycodes
 std::unordered_map<SDL_Keycode, uint8_t> keyMap = {
     {SDLK_1, 0x1}, {SDLK_2, 0x2}, {SDLK_3, 0x3}, {SDLK_4, 0xC},
@@ -55,7 +60,8 @@ int get_key_pressed(){
 void CPUReset()
 {
     m_AddressI = 0 ;
-    m_ProgramCounter = 0x200 ;
+    m_ProgramCounter = 0x200;
+    delayTimer = 0;
     memset(m_Registers, 0, sizeof(m_Registers)) ; // set registers to 0
     memset(m_ScreenData, 255, sizeof(m_ScreenData));
 
@@ -65,6 +71,24 @@ void CPUReset()
     fread( &m_GameMemory[0x200], 0xfff, 1, in);
     fclose(in);
 }
+void drawPixels(SDL_Renderer* renderer, unsigned char pixels[64][32]) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set the background color to black
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set the pixel color to white
+
+    for (int x = 0; x < 64; ++x) {
+        for (int y = 0; y < 32; ++y) {
+            if (pixels[x][y] == 255) {
+                SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
+                SDL_RenderFillRect(renderer, &pixelRect);
+            }
+        }
+    }
+
+    SDL_RenderPresent(renderer);
+}
+
 void handle_instruction(int opcode){
     // decode the opcode
     std::cout << "instruction " << std::hex <<opcode << std::endl;
@@ -134,9 +158,9 @@ void handle_instruction(int opcode){
         }
         case 0x7000:
         {
-            WORD register_index = opcode & 0x0F00;
+            WORD register_index = (opcode & 0x0F00) >> 8;
             WORD constant = opcode & 0x00FF;
-            m_Registers[register_index >>= 8] += constant;
+            m_Registers[register_index] += constant;
             break;
         }
         case 0x8000:
@@ -266,44 +290,39 @@ void handle_instruction(int opcode){
         }
         case 0xD000:
         {
-            int regx = opcode & 0x0F00;
-            regx = regx >> 8;
-            int regy = opcode & 0x00F0;
-            regy = regy >> 4;
+            int regx = (opcode & 0x0F00) >> 8;
+            int regy = (opcode & 0x00F0) >> 4;
             
             int x_cord = m_Registers[regx];
-	        int y_cord = m_Registers[regy];
-        	int height = opcode & 0x000F;
-	        m_Registers[0xf] = 0 ;
-        	for (int row = 0; row < height; row++){
-		        BYTE data = (m_GameMemory[m_AddressI+row]);
+            int y_cord = m_Registers[regy];
+            int height = opcode & 0x000F;
+            m_Registers[0xF] = 0;
+
+            for (int row = 0; row < height; row++) {
+                BYTE data = m_GameMemory[m_AddressI + row];
                 
-                int xpixel = 0 ;
-                int xpixelinv = 7 ;
-                for(xpixel = 0; xpixel < 8; xpixel++, xpixelinv--)
-                {
-                    int mask = 1 << xpixelinv ;
-                    if (data & mask)
-                    {
-                        int x = (xpixel) + x_cord ;
-                        int y = y_cord + (row) ;
+                int xpixel = 0;
+                int xpixelinv = 7;
+                for (xpixel = 0; xpixel < 8; xpixel++, xpixelinv--) {
+                    int mask = 1 << xpixelinv;
+                    if (data & mask) {
+                        int x = (x_cord + xpixel) % 64; // Wrap X coordinate if necessary
+                        int y = (y_cord + row) % 32;    // Wrap Y coordinate if necessary
 
-                        int color = 0 ;
-
-                        if (m_ScreenData[y][x] == 0)
-                        {
-                            color = 255 ;
-                            m_Registers[0xf]=1;
+                        int color = 0;
+                        if (m_ScreenData[x][y] == 0) {
+                            color = 255;
+                            m_Registers[0xF] = 1;
                         }
 
                         m_ScreenData[x][y] = color;
-
                     }
                 }
             }
-
+            drawPixels(renderer, m_ScreenData);
             break;
         }
+
         case 0xE000:
         {
             switch(opcode & 0x000F){
@@ -334,7 +353,8 @@ void handle_instruction(int opcode){
             switch(opcode & 0x00FF){
                 case 0x0007:
                 {
-                    //Sets VX to the value of the delay timer.
+                    int regx = (opcode & 0x0F00) >> 8;
+                    m_Registers[regx] = delayTimer;
                     break;
                 }
                 case 0x000A:
@@ -351,7 +371,8 @@ void handle_instruction(int opcode){
                 }
                 case 0x0015:
                 {
-                    // Sets the delay timer to VX.
+                    int regx = (opcode & 0x0F00) >> 8;
+                    delayTimer = m_Registers[regx];
                     break;
                 }
                 case 0x0018:
@@ -442,23 +463,6 @@ void key_press(int key, int state, bool& quit){
     }
 }
 
-void drawPixels(SDL_Renderer* renderer, unsigned char pixels[64][32]) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set the background color to black
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set the pixel color to white
-
-    for (int x = 0; x < 64; ++x) {
-        for (int y = 0; y < 32; ++y) {
-            if (pixels[x][y] == 255) {
-                SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
-                SDL_RenderFillRect(renderer, &pixelRect);
-            }
-        }
-    }
-
-    SDL_RenderPresent(renderer);
-}
 
 int main(int argc, char* argv[])
 {
@@ -470,9 +474,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("CHIP8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                          640, 320, SDL_WINDOW_SHOWN);
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     // Event loop
     bool quit = false;
@@ -499,7 +500,6 @@ int main(int argc, char* argv[])
 
         //}
         
-        drawPixels(renderer, m_ScreenData);
         if (delayTimer > 0) {
             --delayTimer;
         }

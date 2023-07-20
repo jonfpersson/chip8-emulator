@@ -45,7 +45,8 @@ class chip8_cpu {
 
             // load in the game
             FILE *in;
-            in = fopen("INVADERS", "rb");
+            in = fopen("quirks", "rb");
+            m_GameMemory[0x1FF] = 0;
             fread( &m_GameMemory[0x200], 0xfff, 1, in);
             fclose(in);
         }
@@ -133,46 +134,39 @@ class chip8_cpu {
                     switch(opcode & 0x000F){
                         case 0x0000:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[registerX_index] = m_Registers[registerY_index];
                             break;
                         }
                         case 0x0001:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[registerX_index] |= m_Registers[registerY_index];
+                            m_Registers[0xF] = 0;
                             break;
                         }
                         case 0x0002:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[registerX_index] &= m_Registers[registerY_index];
+                            m_Registers[0xF] = 0;
                             break;
                         }
                         case 0x0003:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[registerX_index] ^= m_Registers[registerY_index];
+                            m_Registers[0xF] = 0;
                             break;
                         }
                         case 0x0004:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[0xF] = 0 ;
                             int value = m_Registers[registerX_index] + m_Registers[registerY_index];
                             if(value > 255){
@@ -184,10 +178,8 @@ class chip8_cpu {
                         }
                         case 0x0005:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[0xF] = 1 ;
                             
                             int value = m_Registers[registerX_index] - m_Registers[registerY_index];
@@ -200,10 +192,11 @@ class chip8_cpu {
                         }
                         case 0x0006:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
+
+                            m_Registers[registerX_index] = m_Registers[registerY_index];
+
                             m_Registers[0xF] = m_Registers[registerX_index] & 0x1;
                             m_Registers[registerX_index] >>= 1;
                             
@@ -211,10 +204,8 @@ class chip8_cpu {
                         }
                         case 0x0007:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            WORD registerY_index = opcode & 0x00F0;
-                            registerX_index >>= 8;
-                            registerY_index >>= 4;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
                             m_Registers[0xF] = 1 ;
 
                             int value = m_Registers[registerY_index] - m_Registers[registerX_index];
@@ -226,8 +217,11 @@ class chip8_cpu {
                         }
                         case 0x000E:
                         {
-                            WORD registerX_index = opcode & 0x0F00;
-                            registerX_index >>= 8;
+                            WORD registerX_index = (opcode & 0x0F00) >> 8;
+                            WORD registerY_index = (opcode & 0x00F0) >> 4;
+
+                            m_Registers[registerX_index] = m_Registers[registerY_index];
+
                             m_Registers[0xF] = m_Registers[registerX_index] >> 7;
                             m_Registers[registerX_index] <<= 1;
                             break;
@@ -237,9 +231,9 @@ class chip8_cpu {
                 }
                 case 0x9000:
                 {
-                    WORD registerX_index = opcode & 0x0F00;
-                    WORD registerY_index = opcode & 0x00F0;
-                    if(m_Registers[registerX_index >>= 8] != m_Registers[registerY_index >>= 4]){
+                    WORD registerX_index = (opcode & 0x0F00) >> 8;
+                    WORD registerY_index = (opcode & 0x00F0) >> 4;
+                    if(m_Registers[registerX_index] != m_Registers[registerY_index]){
                         m_ProgramCounter+=2;
                     }
                     break;

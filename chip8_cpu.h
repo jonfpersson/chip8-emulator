@@ -19,7 +19,7 @@ class chip8_cpu {
         uint8_t delayTimer;
         chip8_screen& m_Window;
         chip8_keyboard& m_Keyboard;
-
+        std::string m_Executable;
         WORD GetNextOpcode()
         {
             WORD res = 0;
@@ -31,7 +31,7 @@ class chip8_cpu {
         }
     public: 
     
-        chip8_cpu (chip8_screen& window, chip8_keyboard& keyboard) : m_Window(window), m_Keyboard(keyboard) {
+        chip8_cpu (chip8_screen& window, chip8_keyboard& keyboard, const std::string& executable) : m_Window(window), m_Keyboard(keyboard), m_Executable(executable) {
             CPUReset();
         }
 
@@ -45,7 +45,7 @@ class chip8_cpu {
 
             // load in the game
             FILE *in;
-            in = fopen("quirks", "rb");
+            in = fopen(m_Executable.c_str(), "rb");
             m_GameMemory[0x1FF] = 0;
             fread( &m_GameMemory[0x200], 0xfff, 1, in);
             fclose(in);

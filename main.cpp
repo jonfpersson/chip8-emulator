@@ -11,10 +11,12 @@
 
 int main(int argc, char* argv[])
 {
+    std::string executable = argv[1];
+
     chip8_screen window;
     chip8_keyboard keyboard;
-    chip8_cpu cpu(window, keyboard);
-    
+    chip8_cpu cpu(window, keyboard, executable);
+
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         std::cout << "Failed to initialize the SDL2 library\n";

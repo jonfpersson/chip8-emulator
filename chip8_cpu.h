@@ -12,7 +12,7 @@ typedef unsigned short int WORD;
 class chip8_cpu {
     private:
         BYTE m_GameMemory[0xFFF]; // 0xFFF bytes of memory, 4095 bytes
-        BYTE m_Registers[16] ; // 16 registers, 1 byte each
+        BYTE m_Registers[16]; // 16 registers, 1 byte each
         WORD m_AddressI; // the 16-bit address register I
         WORD m_ProgramCounter; // the 16-bit program counter
         std::vector<WORD> m_Stack; // the 16-bit stack
@@ -22,12 +22,12 @@ class chip8_cpu {
 
         WORD GetNextOpcode()
         {
-            WORD res = 0 ;
+            WORD res = 0;
             res = m_GameMemory[m_ProgramCounter]; // in example res is 0xAB
-            res <<= 8 ; // shift 8 bits left. In our example res is 0xAB00
+            res <<= 8; // shift 8 bits left. In our example res is 0xAB00
             res |= m_GameMemory[m_ProgramCounter+1]; //In example res is 0xABCD
             m_ProgramCounter+=2;
-            return res ;
+            return res;
         }
     public: 
     
@@ -37,10 +37,10 @@ class chip8_cpu {
 
         void CPUReset()
         {
-            m_AddressI = 0 ;
+            m_AddressI = 0;
             m_ProgramCounter = 0x200;
             delayTimer = 0;
-            memset(m_Registers, 0, sizeof(m_Registers)) ;
+            memset(m_Registers, 0, sizeof(m_Registers));
             m_Window.clear();
 
             // load in the game
@@ -63,7 +63,7 @@ class chip8_cpu {
                 case 0x1000:
                 {
                     m_ProgramCounter = opcode & 0x0FFF;
-                    break ;
+                    break;
                 } 
                 case 0x0000:
                 {
@@ -167,7 +167,7 @@ class chip8_cpu {
                         {
                             WORD registerX_index = (opcode & 0x0F00) >> 8;
                             WORD registerY_index = (opcode & 0x00F0) >> 4;
-                            m_Registers[0xF] = 0 ;
+                            m_Registers[0xF] = 0;
                             int value = m_Registers[registerX_index] + m_Registers[registerY_index];
                             if(value > 255){
                                 m_Registers[0xF] = 1;
@@ -180,7 +180,7 @@ class chip8_cpu {
                         {
                             WORD registerX_index = (opcode & 0x0F00) >> 8;
                             WORD registerY_index = (opcode & 0x00F0) >> 4;
-                            m_Registers[0xF] = 1 ;
+                            m_Registers[0xF] = 1;
                             
                             int value = m_Registers[registerX_index] - m_Registers[registerY_index];
                             if(value < 0){
@@ -206,7 +206,7 @@ class chip8_cpu {
                         {
                             WORD registerX_index = (opcode & 0x0F00) >> 8;
                             WORD registerY_index = (opcode & 0x00F0) >> 4;
-                            m_Registers[0xF] = 1 ;
+                            m_Registers[0xF] = 1;
 
                             int value = m_Registers[registerY_index] - m_Registers[registerX_index];
                             if(value < 0)
@@ -329,9 +329,9 @@ class chip8_cpu {
                             int keypressed = m_Keyboard.get_key_pressed();
 
                             if (keypressed == -1)
-                                m_ProgramCounter -= 2 ;
+                                m_ProgramCounter -= 2;
                             else
-                                m_Registers[regx] = keypressed ;
+                                m_Registers[regx] = keypressed;
                             break;
                         }
                         case 0x0015:
@@ -356,60 +356,60 @@ class chip8_cpu {
                         case 0x0029:
                         {
                             int regx = opcode & 0x0F00;
-                            regx >>= 8 ;
+                            regx >>= 8;
                             m_AddressI = m_Registers[regx];
                             break;
                         }
                         case 0x0033:
                         {
-                            int regx = opcode & 0x0F00 ;
-                            regx >>= 8 ;
+                            int regx = opcode & 0x0F00;
+                            regx >>= 8;
 
-                            int value = m_Registers[regx] ;
+                            int value = m_Registers[regx];
 
-                            int hundreds = value / 100 ;
-                            int tens = (value / 10) % 10 ;
-                            int units = value % 10 ;
+                            int hundreds = value / 100;
+                            int tens = (value / 10) % 10;
+                            int units = value % 10;
 
-                            m_GameMemory[m_AddressI] = hundreds ;
-                            m_GameMemory[m_AddressI+1] = tens ;
-                            m_GameMemory[m_AddressI+2] = units ;
+                            m_GameMemory[m_AddressI] = hundreds;
+                            m_GameMemory[m_AddressI+1] = tens;
+                            m_GameMemory[m_AddressI+2] = units;
                             break;
                         }
                         case 0x0055:
                         {
-                            int regx = opcode & 0x0F00 ;
-                            regx >>= 8 ;
+                            int regx = opcode & 0x0F00;
+                            regx >>= 8;
 
-                            for (int i = 0 ; i <= regx; i++)
+                            for (int i = 0; i <= regx; i++)
                             {
-                                m_GameMemory[m_AddressI+i] = m_Registers[i] ;
+                                m_GameMemory[m_AddressI+i] = m_Registers[i];
                             }
 
-                            m_AddressI= m_AddressI+regx+1 ;
+                            m_AddressI= m_AddressI+regx+1;
                             break;
                         }
                         case 0x0065:
                         {
-                            int regx = opcode & 0x0F00 ;
-                            regx >>= 8 ;
+                            int regx = opcode & 0x0F00;
+                            regx >>= 8;
 
-                            for (int i = 0 ; i <= regx; i++)
+                            for (int i = 0; i <= regx; i++)
                             {
-                                m_Registers[i] = m_GameMemory[m_AddressI+i]  ;
+                                m_Registers[i] = m_GameMemory[m_AddressI+i] ;
                             }
 
-                            m_AddressI= m_AddressI+regx+1 ;
+                            m_AddressI= m_AddressI+regx+1;
                             break;
                         }
                     }
 
                     break;
                 }
-                break ;
+                break;
                 default : {
                     std::cerr << "Can't interpret instruction " << opcode;
-                    break ; // opcode yet to be handled
+                    break; // opcode yet to be handled
                 }
         }
 }

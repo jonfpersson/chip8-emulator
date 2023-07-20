@@ -20,7 +20,7 @@ class chip8_keyboard {
     int get_key_pressed(){
         int res = -1;
 
-        for (int i = 0 ; i < 16; i++)
+        for (int i = 0; i < 16; i++)
         {
             if (m_keys[i] > 0)
                 return i;

@@ -1,12 +1,13 @@
 #ifndef CHIP8_KEYBOARD
 #define CHIP8_KEYBOARD
 
+#define CHIP8_KEYS 16
 typedef unsigned char BYTE;
 typedef unsigned short int WORD;
 
 class chip8_keyboard {
     private:
-    BYTE m_keys[16];
+    BYTE m_keys[CHIP8_KEYS];
     // Initialize the mapping of SDL keys to CHIP-8 keycodes
     std::unordered_map<SDL_Keycode, uint8_t> keyMap = {
         {SDLK_1, 0x1}, {SDLK_2, 0x2}, {SDLK_3, 0x3}, {SDLK_4, 0xC},
@@ -20,7 +21,7 @@ class chip8_keyboard {
     int get_key_pressed(){
         int res = -1;
 
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < CHIP8_KEYS; i++)
         {
             if (m_keys[i] > 0)
                 return i;

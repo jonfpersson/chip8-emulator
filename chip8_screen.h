@@ -5,9 +5,11 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 320
 #define PIXEL_SIZE 10
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 32
+#define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * PIXEL_SIZE)
+#define SCREEN_HEIGHT_SCALED (SCREEN_HEIGHT * PIXEL_SIZE)
 
 typedef unsigned char BYTE;
 typedef unsigned short int WORD;
@@ -15,9 +17,9 @@ typedef unsigned short int WORD;
 class chip8_screen {
     private:
     SDL_Window* window = SDL_CreateWindow("CHIP8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+                                        SCREEN_WIDTH_SCALED, SCREEN_HEIGHT_SCALED, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    BYTE m_ScreenData[64][32];
+    BYTE m_ScreenData[SCREEN_WIDTH][SCREEN_HEIGHT];
 
     public:
     chip8_screen(){
@@ -35,8 +37,8 @@ class chip8_screen {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set the background color to black
 
 
-        for (int x = 0; x < 64; ++x) {
-            for (int y = 0; y < 32; ++y) {
+        for (int x = 0; x < SCREEN_WIDTH; ++x) {
+            for (int y = 0; y < SCREEN_HEIGHT; ++y) {
                 if (m_ScreenData[x][y] == 255) {
                     SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
                     SDL_RenderFillRect(renderer, &pixelRect);

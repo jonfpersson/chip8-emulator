@@ -6,6 +6,7 @@
 #include "chip8_screen.h"
 #include "chip8_keyboard.h"
 
+#define GAME_MEMORY_START_LOCATION 0x200
 typedef unsigned char BYTE;
 typedef unsigned short int WORD;
 
@@ -38,7 +39,7 @@ class chip8_cpu {
         void CPUReset()
         {
             m_AddressI = 0;
-            m_ProgramCounter = 0x200;
+            m_ProgramCounter = GAME_MEMORY_START_LOCATION;
             delayTimer = 0;
             memset(m_Registers, 0, sizeof(m_Registers));
             m_Window.clear();
@@ -46,7 +47,7 @@ class chip8_cpu {
             // load in the game
             FILE *in;
             in = fopen(m_Executable.c_str(), "rb");
-            fread( &m_GameMemory[0x200], 0xfff, 1, in);
+            fread( &m_GameMemory[GAME_MEMORY_START_LOCATION], 0xfff, 1, in);
             fclose(in);
         }
 

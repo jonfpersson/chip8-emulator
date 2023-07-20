@@ -46,7 +46,6 @@ class chip8_cpu {
             // load in the game
             FILE *in;
             in = fopen(m_Executable.c_str(), "rb");
-            m_GameMemory[0x1FF] = 0;
             fread( &m_GameMemory[0x200], 0xfff, 1, in);
             fclose(in);
         }

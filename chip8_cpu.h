@@ -99,18 +99,18 @@ class chip8_cpu {
                 }
                 case 0x4000:
                 {
-                    WORD register_index = opcode & 0x0F00;
+                    WORD register_index = (opcode & 0x0F00) >> 8;
                     WORD constant = opcode & 0x00FF;
-                    if(m_Registers[register_index >>= 8] != constant){
+                    if(m_Registers[register_index] != constant){
                         m_ProgramCounter+=2;
                     }
                     break;
                 }
                 case 0x5000:
                 {
-                    WORD registerX_index = opcode & 0x0F00;
-                    WORD registerY_index = opcode & 0x00F0;
-                    if(m_Registers[registerX_index >>= 8] == m_Registers[registerY_index >>= 4]){
+                    WORD registerX_index = (opcode & 0x0F00) >> 8;
+                    WORD registerY_index = (opcode & 0x00F0) >> 4;
+                    if(m_Registers[registerX_index] == m_Registers[registerY_index]){
                         m_ProgramCounter+=2;
                     }
                     break;
@@ -250,8 +250,7 @@ class chip8_cpu {
                 }
                 case 0xC000:
                 {
-                    int regx = opcode & 0x0F00;
-                    regx >>= 8;
+                    int regx = (opcode & 0x0F00) >> 8;
                     m_Registers[regx] = rand() & (opcode & 0x00FF);
                     break;
                 }
@@ -324,8 +323,7 @@ class chip8_cpu {
                         }
                         case 0x000A:
                         {
-                            int regx = opcode & 0x0F00;
-                            regx >>= 8;
+                            int regx = (opcode & 0x0F00) >> 8;
                             int keypressed = m_Keyboard.get_key_pressed();
 
                             if (keypressed == -1)
@@ -347,23 +345,20 @@ class chip8_cpu {
                         }
                         case 0x001E:
                         {
-                            int constant = opcode & 0x0F00;
-                            constant >>= 8;
+                            int constant = (opcode & 0x0F00) >> 8;
                             auto Vx = m_Registers[constant];
                             m_AddressI += Vx;
                             break;
                         }
                         case 0x0029:
                         {
-                            int regx = opcode & 0x0F00;
-                            regx >>= 8;
+                            int regx = (opcode & 0x0F00) >> 8;
                             m_AddressI = m_Registers[regx];
                             break;
                         }
                         case 0x0033:
                         {
-                            int regx = opcode & 0x0F00;
-                            regx >>= 8;
+                            int regx = (opcode & 0x0F00) >> 8;
 
                             int value = m_Registers[regx];
 
@@ -378,28 +373,26 @@ class chip8_cpu {
                         }
                         case 0x0055:
                         {
-                            int regx = opcode & 0x0F00;
-                            regx >>= 8;
+                            int regx = (opcode & 0x0F00) >> 8;
 
                             for (int i = 0; i <= regx; i++)
                             {
                                 m_GameMemory[m_AddressI+i] = m_Registers[i];
                             }
 
-                            m_AddressI= m_AddressI+regx+1;
+                            m_AddressI= m_AddressI + regx + 1;
                             break;
                         }
                         case 0x0065:
                         {
-                            int regx = opcode & 0x0F00;
-                            regx >>= 8;
+                            int regx = (opcode & 0x0F00) >> 8;
 
                             for (int i = 0; i <= regx; i++)
                             {
                                 m_Registers[i] = m_GameMemory[m_AddressI+i] ;
                             }
 
-                            m_AddressI= m_AddressI+regx+1;
+                            m_AddressI= m_AddressI + regx + 1;
                             break;
                         }
                     }

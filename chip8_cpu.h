@@ -57,7 +57,7 @@ class chip8_cpu {
             }
 
             int opcode = GetNextOpcode();
-            std::cout << "instruction " << std::hex << opcode << std::endl;
+            //std::cout << "instruction " << std::hex << opcode << std::endl;
             switch (opcode & 0xF000)
             {   
                 case 0x1000:
@@ -326,7 +326,7 @@ class chip8_cpu {
                             int regx = (opcode & 0x0F00) >> 8;
                             int keypressed = m_Keyboard.get_key_pressed();
 
-                            if (keypressed == -1)
+                            if (keypressed == 0)
                                 m_ProgramCounter -= 2;
                             else
                                 m_Registers[regx] = keypressed;
@@ -345,8 +345,8 @@ class chip8_cpu {
                         }
                         case 0x001E:
                         {
-                            int constant = (opcode & 0x0F00) >> 8;
-                            auto Vx = m_Registers[constant];
+                            int regx = (opcode & 0x0F00) >> 8;
+                            auto Vx = m_Registers[regx];
                             m_AddressI += Vx;
                             break;
                         }
@@ -399,7 +399,6 @@ class chip8_cpu {
 
                     break;
                 }
-                break;
                 default : {
                     std::cerr << "Can't interpret instruction " << opcode;
                     break; // opcode yet to be handled

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
+#include <thread>
+
 #include "chip8_screen.h"
 #include "chip8_keyboard.h"
 
@@ -328,8 +330,15 @@ class chip8_cpu {
 
                             if (keypressed == 0)
                                 m_ProgramCounter -= 2;
-                            else
+                            else{
                                 m_Registers[regx] = keypressed;
+                                
+                                while(m_Keyboard.get_key_pressed() != 0){
+                                    bool f;
+                                    m_Keyboard.poll_status(f);
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                                }
+                            }
                             break;
                         }
                         case 0x0015:

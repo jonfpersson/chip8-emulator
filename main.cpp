@@ -25,17 +25,7 @@ int main(int argc, char* argv[])
 
     bool quit = false;
     while (!quit) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) 
-                quit = true;
-            else if (event.type == SDL_KEYDOWN) {
-                std::cout << event.key.keysym.sym << std::endl;
-                keyboard.handle_keyboard_input(event.key.keysym.sym, 1, quit);
-            }
-            else if (event.type == SDL_KEYUP) 
-                keyboard.handle_keyboard_input(event.key.keysym.sym, 0, quit);
-        }
+        keyboard.poll_status(quit);
         cpu.start_program();
        
         SDL_Delay(2.5);

@@ -18,6 +18,20 @@ class chip8_keyboard {
 
     public:
     
+    void poll_status(bool &quit){
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) 
+                quit = true;
+            else if (event.type == SDL_KEYDOWN) {
+                std::cout << event.key.keysym.sym << std::endl;
+                handle_keyboard_input(event.key.keysym.sym, 1, quit);
+            }
+            else if (event.type == SDL_KEYUP) 
+                handle_keyboard_input(event.key.keysym.sym, 0, quit);
+        }
+    }
+
     int get_key_pressed(){
         int res = 0;
 

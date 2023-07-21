@@ -31,23 +31,22 @@ class chip8_screen {
         SDL_Quit();
     }
 
-    void drawPixels() {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Set the pixel color to white
-        SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Set the background color to black
-
-
-        for (int x = 0; x < SCREEN_WIDTH; ++x) {
-            for (int y = 0; y < SCREEN_HEIGHT; ++y) {
-                if (m_ScreenData[x][y] == 255) {
-                    SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
-                    SDL_RenderFillRect(renderer, &pixelRect);
-                }
+void drawPixels() {
+    for (int x = 0; x < SCREEN_WIDTH; ++x) {
+        for (int y = 0; y < SCREEN_HEIGHT; ++y) {
+            if (m_ScreenData[x][y] == 1) {
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            } else {
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
             }
+                SDL_Rect pixelRect = { x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE };
+                SDL_RenderFillRect(renderer, &pixelRect);
         }
-
-        SDL_RenderPresent(renderer);
     }
+
+    SDL_RenderPresent(renderer);
+}
+
 
     void setPixel(int x, int y, int value){
         m_ScreenData[x][y] = value;

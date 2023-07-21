@@ -53,7 +53,7 @@ class chip8_cpu {
             fclose(in);
         }
 
-        void start_program(){
+        void run_program(){
             if (delayTimer > 0) {
                 --delayTimer;
             }
@@ -264,32 +264,34 @@ class chip8_cpu {
                     int x_cord = m_Registers[regx];
                     int y_cord = m_Registers[regy];
                     int height = opcode & 0x000F;
-                    m_Registers[0xF] = 0;
+
+                    m_Registers[0xF] = 0; // Initialize VF to 0
 
                     for (int row = 0; row < height; row++) {
                         BYTE data = m_GameMemory[m_AddressI + row];
 
-                        int xpixel = 0;
                         int xpixelinv = 7;
-                        for (xpixel = 0; xpixel < 8; xpixel++, xpixelinv--) {
+                        for (int xpixel = 0; xpixel < 8; xpixel++, xpixelinv--) {
                             int mask = 1 << xpixelinv;
                             if (data & mask) {
-                            int x = (x_cord + xpixel) % 64; // Wrap X coordinate if necessary
-                            int y = (y_cord + row) % 32;    // Wrap Y coordinate if necessary
+                                int x = (x_cord + xpixel) % SCREEN_WIDTH; // Wrap around the screen horizontally
+                                int y = (y_cord + row) % SCREEN_HEIGHT;   // Wrap around the screen vertically
 
                                 int color = 0;
-                                if (m_Window.getPixel(x,y) == 0) {
-                                    color = 255;
-                                    m_Registers[0xF] = 1;
+                                if (m_Window.getPixel(x, y) == 0) {
+                                    color = 1;
                                 }
+                                int screenPixel = m_Window.getPixel(x, y);
+                                m_Registers[0xF] |= (color & screenPixel); // Check for collision
 
-                                m_Window.setPixel(x,y,color);
+                                m_Window.setPixel(x, y, color);
                             }
                         }
                     }
                     m_Window.drawPixels();
                     break;
                 }
+
                 case 0xE000:
                 {
                     switch(opcode & 0x000F){
@@ -336,7 +338,6 @@ class chip8_cpu {
                                 while(m_Keyboard.get_key_pressed() != 0){
                                     bool f;
                                     m_Keyboard.poll_status(f);
-                                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                                 }
                             }
                             break;
@@ -410,7 +411,7 @@ class chip8_cpu {
                 }
                 default : {
                     std::cerr << "Can't interpret instruction " << opcode;
-                    break; // opcode yet to be handled
+                    break;
                 }
         }
 }

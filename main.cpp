@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     bool quit = false;
     while (!quit) {
         keyboard.poll_status(quit);
-        cpu.start_program();
+        cpu.run_program();
        
         SDL_Delay(2.5);
     }

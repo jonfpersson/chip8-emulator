@@ -28,7 +28,7 @@ class chip8_cpu {
             WORD res = 0;
             res = m_GameMemory[m_ProgramCounter]; // in example res is 0xAB
             res <<= 8; // shift 8 bits left. In our example res is 0xAB00
-            res |= m_GameMemory[m_ProgramCounter+1]; //In example res is 0xABCD
+            res |= m_GameMemory[m_ProgramCounter+1];
             m_ProgramCounter+=2;
             return res;
         }
@@ -73,13 +73,12 @@ class chip8_cpu {
                     {
                         case 0x0000:{
                             m_Window.clear();
-
-                            break; // clear screen opcode
+                            break;
                         } 
                         case 0x000E: {
                             m_ProgramCounter = m_Stack.back();
                             m_Stack.pop_back();
-                            break; // return subroutine
+                            break;
                         }
                     }
                     break;
@@ -265,7 +264,7 @@ class chip8_cpu {
                     int y_cord = m_Registers[regy] & 31;
                     int height = opcode & 0x000F;
 
-                    m_Registers[0xF] = 0; // Initialize VF to 0
+                    m_Registers[0xF] = 0;
 
                     for (int row = 0; row < height; row++) {
                         BYTE data = m_GameMemory[m_AddressI + row];
@@ -286,7 +285,6 @@ class chip8_cpu {
                             }
                         }
                     }
-                    //m_Window.drawPixels();
                     break;
                 }
 

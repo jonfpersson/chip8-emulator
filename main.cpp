@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <iostream>  // For basic I/O operations (optional but often used)
-#include <vector>    // Include the vector header
-#include <cstring> // Include this header for using memset
+#include <iostream>
+#include <vector>
+#include <cstring>
 #include <unordered_map>
 #include <SDL2/SDL.h>
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     }
 
     bool quit = false;
-    const int DESIRED_FRAME_TIME = 1000 / 240;
+    const int DESIRED_FRAME_TIME = 1000 / 480;
 
     std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     while (!quit) {
@@ -32,16 +32,13 @@ int main(int argc, char* argv[])
         cpu.run_program();
         window.drawPixels();
 
-        // Calculate the time taken for the loop iteration in milliseconds
         std::chrono::high_resolution_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
         int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastFrameTime).count();
 
-        // If the elapsed time is less than the desired frame time, introduce a delay
         if (elapsedTime < DESIRED_FRAME_TIME) {
             SDL_Delay(DESIRED_FRAME_TIME - elapsedTime);
         }
 
-        // Keep track of the total time elapsed since the last frame update
         lastFrameTime = std::chrono::high_resolution_clock::now();
     }
 

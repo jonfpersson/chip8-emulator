@@ -288,7 +288,7 @@ class chip8_cpu {
                             }
                         }
                     }
-                    m_Window.drawPixels();
+                    //m_Window.drawPixels();
                     break;
                 }
 

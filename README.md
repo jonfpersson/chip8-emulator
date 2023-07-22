@@ -12,9 +12,9 @@ This is a Chip-8 emulator developed in C++ for running retro Chip-8 games. The e
 - Accurate Chip-8 opcode emulation
 - Support for all standard Chip-8 instructions
 - User-friendly CLI interface
+- Save and load game state
 - Configurable display and sound settings (Pending)
 - Pause, resume, and reset functionality (Pending)
-- Save and load game state (Pending)
 
 ## Getting Started
 
@@ -36,6 +36,9 @@ g++ main.cpp -lSDL2 -o chip8_emulator
 Run the emulator executable with the path to a Chip-8 ROM file as the argument:
 
 ./chip8_emulator path/to/romfile
+
+To save state, press "j"
+To load state, press "k"
 
 ## Screenshots
 ![Pong](PONG.png)

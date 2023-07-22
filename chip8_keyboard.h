@@ -1,7 +1,7 @@
 #ifndef CHIP8_KEYBOARD
 #define CHIP8_KEYBOARD
 
-#define CHIP8_KEYS 16
+#define CHIP8_KEYS 18
 typedef unsigned char BYTE;
 typedef unsigned short int WORD;
 
@@ -13,7 +13,8 @@ class chip8_keyboard {
             {SDLK_1, 0x1}, {SDLK_2, 0x2}, {SDLK_3, 0x3}, {SDLK_4, 0xC},
             {SDLK_q, 0x4}, {SDLK_w, 0x5}, {SDLK_e, 0x6}, {SDLK_r, 0xD},
             {SDLK_a, 0x7}, {SDLK_s, 0x8}, {SDLK_d, 0x9}, {SDLK_f, 0xE},
-            {SDLK_z, 0xA}, {SDLK_x, 0x0}, {SDLK_c, 0xB}, {SDLK_v, 0xF}
+            {SDLK_z, 0xA}, {SDLK_x, 0x0}, {SDLK_c, 0xB}, {SDLK_v, 0xF},
+            {SDLK_j, 0x10}, {SDLK_k, 0x11}
         };
 
         void handle_keyboard_input(int key, int state, bool& quit){
@@ -30,18 +31,17 @@ class chip8_keyboard {
             }
         }
     public:
-        
         void poll_status(bool &quit){
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) 
                     quit = true;
                 else if (event.type == SDL_KEYDOWN) {
-                    std::cout << event.key.keysym.sym << std::endl;
                     handle_keyboard_input(event.key.keysym.sym, 1, quit);
                 }
-                else if (event.type == SDL_KEYUP) 
+                else if (event.type == SDL_KEYUP) {
                     handle_keyboard_input(event.key.keysym.sym, 0, quit);
+                }
             }
         }
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <fstream>
 
 #include "chip8_screen.h"
 #include "chip8_keyboard.h"
@@ -32,6 +33,75 @@ class chip8_cpu {
             m_ProgramCounter+=2;
             return res;
         }
+
+        int save_state(){
+            std::ofstream outputFile("state.emu", std::ios::binary);
+            if (!outputFile.is_open()) {
+                std::cout << "Error opening the file." << std::endl;
+                return 1;
+            }
+
+            outputFile.write(reinterpret_cast<const char*>(m_GameMemory), sizeof(m_GameMemory));
+            outputFile.write(reinterpret_cast<const char*>(m_Registers), sizeof(m_Registers));
+            outputFile.write(reinterpret_cast<const char*>(&m_AddressI), sizeof(m_AddressI));
+            outputFile.write(reinterpret_cast<const char*>(&m_ProgramCounter), sizeof(m_ProgramCounter));
+
+            int vectorSize = m_Stack.size();
+            outputFile.write(reinterpret_cast<const char*>(&vectorSize), sizeof(vectorSize));
+            for(int i = 0; i < vectorSize; i++){
+                outputFile.write(reinterpret_cast<const char*>(&(m_Stack[i])), sizeof(m_Stack[i]));
+            }
+
+            outputFile.write(reinterpret_cast<const char*>(&delayTimer), sizeof(delayTimer));
+            outputFile.write(reinterpret_cast<const char*>(m_Window.getScreenData()), sizeof(m_Window.getScreenData()));
+
+            outputFile.close();
+            std::cout << "Saving done" << std::endl;
+            return 0;
+        }
+
+        int load_state(){
+            std::ifstream inputFile("state.emu", std::ios::binary);
+
+            if (!inputFile.is_open()) {
+                std::cout << "Error opening the file." << std::endl;
+                return 1;
+            }
+            inputFile.read(reinterpret_cast<char*>(m_GameMemory), sizeof(m_GameMemory));
+            inputFile.read(reinterpret_cast<char*>(m_Registers), sizeof(m_Registers));
+            inputFile.read(reinterpret_cast<char*>(&m_AddressI), sizeof(m_AddressI));
+            inputFile.read(reinterpret_cast<char*>(&m_ProgramCounter), sizeof(m_ProgramCounter));
+            int vectorSize;
+            inputFile.read(reinterpret_cast<char*>(&vectorSize), sizeof(vectorSize));
+            for(int i = 0; i < vectorSize; i++){
+                inputFile.read(reinterpret_cast<char*>(&(m_Stack[i])), sizeof(m_Stack[i]));
+            }
+            inputFile.read(reinterpret_cast<char*>(&delayTimer), sizeof(delayTimer));
+            inputFile.read(reinterpret_cast<char*>(m_Window.getScreenData()), sizeof(m_Window.getScreenData()));
+            m_Window.drawPixels();
+            std::cout << "Loading done" << std::endl;
+            return 0;
+        }
+
+        void check_for_state_action() {
+            int keypressed = m_Keyboard.get_key_pressed();
+
+            // Check if keypressed is either 16 (save key) or 17 (load key)
+            if (keypressed == 16 || keypressed == 17) {
+                // Wait for the key release before proceeding
+                while (m_Keyboard.get_key_value(keypressed) != 0) {
+                    bool quit = false;
+                    m_Keyboard.poll_status(quit);
+                }
+
+                if (keypressed == 16) {
+                    save_state();
+                } else {
+                    load_state();
+                }
+            }
+        }
+
     public: 
     
         chip8_cpu (chip8_screen& window, chip8_keyboard& keyboard, const std::string& executable) : m_Window(window), m_Keyboard(keyboard), m_Executable(executable) {
@@ -54,6 +124,7 @@ class chip8_cpu {
         }
 
         void run_program(){
+            check_for_state_action();
             if (delayTimer > 0) {
                 --delayTimer;
             }

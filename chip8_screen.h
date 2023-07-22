@@ -5,7 +5,7 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
-#define PIXEL_SIZE 10
+#define PIXEL_SIZE 20
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 32
 #define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * PIXEL_SIZE)
@@ -26,6 +26,9 @@ class chip8_screen {
             clear();
         }
 
+        unsigned char(&getScreenData())[SCREEN_WIDTH][SCREEN_HEIGHT] {
+            return m_ScreenData;
+        }
         void free(){
             SDL_DestroyRenderer(renderer);
             SDL_DestroyWindow(window);

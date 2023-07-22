@@ -261,8 +261,8 @@ class chip8_cpu {
                     int regx = (opcode & 0x0F00) >> 8;
                     int regy = (opcode & 0x00F0) >> 4;
 
-                    int x_cord = m_Registers[regx];
-                    int y_cord = m_Registers[regy];
+                    int x_cord = m_Registers[regx] & 63;
+                    int y_cord = m_Registers[regy] & 31;
                     int height = opcode & 0x000F;
 
                     m_Registers[0xF] = 0; // Initialize VF to 0
@@ -276,13 +276,11 @@ class chip8_cpu {
                             if (data & mask) {
                                 int x = (x_cord + xpixel) % SCREEN_WIDTH; // Wrap around the screen horizontally
                                 int y = (y_cord + row) % SCREEN_HEIGHT;   // Wrap around the screen vertically
-
-                                int color = 0;
-                                if (m_Window.getPixel(x, y) == 0) {
-                                    color = 1;
+                                int color = 1;
+                                if (m_Window.getPixel(x, y) == 1) {
+                                    color = 0;
+                                    m_Registers[0xF] = 1;
                                 }
-                                int screenPixel = m_Window.getPixel(x, y);
-                                m_Registers[0xF] |= (color & screenPixel); // Check for collision
 
                                 m_Window.setPixel(x, y, color);
                             }

@@ -42,6 +42,7 @@ To load state, press "k"
 
 ## Screenshots
 ![Pong](PONG.png)
+![Brix](BRIX.png)
 
 ## Contributing
 

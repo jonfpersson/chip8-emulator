@@ -20,22 +20,22 @@ This is a Chip-8 emulator developed in C++ for running retro Chip-8 games. The e
 
 ### Prerequisites
 
-- C++ Compiler (e.g., g++ or clang++)
-- SDL2 installed (apt install libsdl2-dev)
+- C++ Compiler (g++)
+- SDL2 installed (```apt install libsdl2-dev```)
 
 ### Installation
 
 1. Clone the repository:
-git clone https://github.com/jonfpersson/chip8-emulator.git
+```git clone https://github.com/jonfpersson/chip8-emulator.git```
 
-2. Build the emulator using g++:
-g++ main.cpp -lSDL2 -o chip8_emulator
+2. Build the emulator using make:
+```make```
 
 
 ## Usage
 Run the emulator executable with the path to a Chip-8 ROM file as the argument:
 
-./chip8_emulator path/to/romfile
+```./chip8_emulator path/to/romfile```
 
 To save state, press "j"
 To load state, press "k"
